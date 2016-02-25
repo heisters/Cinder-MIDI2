@@ -27,7 +27,6 @@ Midi parsing taken from openFrameworks addon ofxMidi by Theo Watson & Dan Wilcox
 #pragma once
 
 #include "MidiHeaders.h"
-#include "cinder/app/AppBasic.h"
 
 /*#include "MidiConstants.h"
 #include "RtMidi.h"
@@ -42,13 +41,13 @@ namespace cinder { namespace midi {
 /// Create multiple instances to connect to multiple ports.
 /// 
 /// With thanks to the authors of ofxMidi <https://github.com/danomatika/ofxMidi/network>.
-class MidiOut {
+class Output {
 	
 public:
 	
 	/// Set the output client name (optional).
-	MidiOut(std::string const& name="Cinder-MIDI Client");
-	virtual ~MidiOut();
+	Output(std::string const& name="Cinder-MIDI Client");
+	virtual ~Output();
 	
 	/// \section Global Port Info
 	

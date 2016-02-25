@@ -15,10 +15,10 @@
 using namespace cinder::midi;
 using namespace std;
 
-bool MidiOut::sVerboseLogging = false;
+bool Output::sVerboseLogging = false;
 
 /// Set the output client name (optional).
-MidiOut::MidiOut(std::string const& name)
+Output::Output(std::string const& name)
 : mName(name)
 , mRtMidiOut(new RtMidiOut())
 //, mRtMidiOut(new RtMidiOut(name))
@@ -27,7 +27,7 @@ MidiOut::MidiOut(std::string const& name)
 , mBytes(3)
 {}
 
-MidiOut::~MidiOut()
+Output::~Output()
 {
 	closePort();
 }
@@ -36,7 +36,7 @@ MidiOut::~MidiOut()
 /// The vector index corresponds with the name's port number.
 /// Note: this order may change when new devices are added/removed
 ///		  from the system.
-std::vector<std::string> MidiOut::getPortList() const
+std::vector<std::string> Output::getPortList() const
 {
 	vector<string> portList;
 	for(unsigned int i = 0; i < mRtMidiOut->getPortCount(); ++i)
@@ -47,14 +47,14 @@ std::vector<std::string> MidiOut::getPortList() const
 }
 
 /// Get the number of output ports
-int MidiOut::getNumPorts() const
+int Output::getNumPorts() const
 {
 		return mRtMidiOut->getPortCount();
 }
 
 /// Get the name of an output port by it's number
 /// \return "" if number is invalid
-std::string MidiOut::getPortName(unsigned int portNumber) const
+std::string Output::getPortName(unsigned int portNumber) const
 {
 	return mRtMidiOut->getPortName(portNumber);
 }
@@ -63,7 +63,7 @@ std::string MidiOut::getPortName(unsigned int portNumber) const
 
 /// Connect to an output port.
 /// Setting port = 0 will open the first available
-bool MidiOut::openPort(unsigned int portNumber)
+bool Output::openPort(unsigned int portNumber)
 {
 	// handle rtmidi exceptions
 	try
@@ -75,13 +75,13 @@ bool MidiOut::openPort(unsigned int portNumber)
 	}
 	catch(RtError& err)
 	{
-        std::cout << "[ERROR ci::midi::MidiOut::openPort] couldn't open port " << portNumber << " " << err.getMessage() << std::endl;
+        std::cout << "[ERROR ci::midi::Output::openPort] couldn't open port " << portNumber << " " << err.getMessage() << std::endl;
 		return false;
 	}
 	mPortNumber = portNumber;
 	mPortName = mRtMidiOut->getPortName(portNumber);
 	if (sVerboseLogging)
-		std::cout << "[VERBOSE ci::midi::MidiOut::openPort] opened port " << portNumber << " " << mPortName << std::endl;
+		std::cout << "[VERBOSE ci::midi::Output::openPort] opened port " << portNumber << " " << mPortName << std::endl;
 	return true;
 }
 
@@ -91,7 +91,7 @@ bool MidiOut::openPort(unsigned int portNumber)
 ///	note: an open virtual port ofxMidiOut object cannot see it's virtual
 ///       own virtual port when listing ports
 ///
-bool MidiOut::openVirtualPort(std::string const& portName)
+bool Output::openVirtualPort(std::string const& portName)
 {
 	// handle rtmidi exceptions
 	try
@@ -100,30 +100,30 @@ bool MidiOut::openVirtualPort(std::string const& portName)
 		mRtMidiOut->openVirtualPort(portName);
 	}
 	catch(RtError& err) {
-        std::cout << "[ERROR ci::midi::MidiOut::openVirtualPort] couldn't open virtual port " << portName << " " << err.getMessage() << std::endl;
+        std::cout << "[ERROR ci::midi::Output::openVirtualPort] couldn't open virtual port " << portName << " " << err.getMessage() << std::endl;
 		return false;
 	}
 	
 	mPortName = portName;
 	mIsVirtual = true;
 	if (sVerboseLogging)
-		std::cout << "[VERBOSE ci::midi::MidiOut::openVirtualPort] opened virtual port " << portName << std::endl;
+		std::cout << "[VERBOSE ci::midi::Output::openVirtualPort] opened virtual port " << portName << std::endl;
 	return true;
 }
 
 /// Close the port connection
-void MidiOut::closePort()
+void Output::closePort()
 {
 	if (sVerboseLogging)
 	{
 		if(mIsVirtual)
 		{
 			assert(mPortNumber == -1); // ensure invariant is valid
-            std::cout << "[VERBOSE ci::midi::MidiOut::closePort] closed virtual port " << mPortName << std::endl;
+            std::cout << "[VERBOSE ci::midi::Output::closePort] closed virtual port " << mPortName << std::endl;
 		}
 		else if(mPortNumber > -1)
 		{
-            std::cout << "[VERBOSE ci::midi::MidiOut::closePort] closed port " << mPortNumber << ": " << mPortName << std::endl;
+            std::cout << "[VERBOSE ci::midi::Output::closePort] closed port " << mPortNumber << ": " << mPortName << std::endl;
 		}
 	}
 	mRtMidiOut->closePort();
@@ -134,26 +134,26 @@ void MidiOut::closePort()
 
 /// Get the port number if connected.
 /// \return -1 if not connected or this is a virtual port
-int MidiOut::getPort() const
+int Output::getPort() const
 {
 	return mPortNumber;
 }
 
 /// Get the connected output port name
 /// \return "" if not connected
-std::string MidiOut::getName() const
+std::string Output::getName() const
 {
 	return mPortName;
 }
 
 /// \return true if connected
-bool MidiOut::isOpen() const
+bool Output::isOpen() const
 {
 	return mPortNumber>-1 || mIsVirtual;
 }
 
 /// \return true if this is a virtual port
-bool MidiOut::isVirtual() const
+bool Output::isVirtual() const
 {
 	return mIsVirtual;
 }
@@ -181,7 +181,7 @@ bool MidiOut::isVirtual() const
 /// references:
 ///		http://www.srm.com/qtma/davidsmidispec.html
 ///
-void MidiOut::sendMessage(unsigned char status, unsigned char byteOne, unsigned char byteTwo)
+void Output::sendMessage(unsigned char status, unsigned char byteOne, unsigned char byteTwo)
 {
 	assert(mBytes.size() == 3);
 	mBytes[0] = status;
@@ -190,7 +190,7 @@ void MidiOut::sendMessage(unsigned char status, unsigned char byteOne, unsigned 
 	sendMessage(mBytes);
 }
 
-void MidiOut::sendMessage(unsigned char status, unsigned char byteOne)
+void Output::sendMessage(unsigned char status, unsigned char byteOne)
 {
 	assert(mBytes.size() == 3);
 	mBytes.resize(2);
@@ -200,45 +200,45 @@ void MidiOut::sendMessage(unsigned char status, unsigned char byteOne)
 	mBytes.resize(3); // restore invariant
 }
 
-void MidiOut::sendMessage(std::vector<unsigned char>& bytes)
+void Output::sendMessage(std::vector<unsigned char>& bytes)
 {
 	mRtMidiOut->sendMessage(&bytes);
 }
 
-void MidiOut::sendNoteOn(int channel, int pitch, int velocity)
+void Output::sendNoteOn(int channel, int pitch, int velocity)
 {
 	sendMessage(MIDI_NOTE_ON+channel-1, pitch, velocity);
 }
-void MidiOut::sendNoteOff(int channel, int pitch, int velocity)
+void Output::sendNoteOff(int channel, int pitch, int velocity)
 {
 	sendMessage(MIDI_NOTE_OFF+channel-1, pitch, velocity);
 }
-void MidiOut::sendControlChange(int channel, int control, int value)
+void Output::sendControlChange(int channel, int control, int value)
 {
 	sendMessage(MIDI_CONTROL_CHANGE+channel-1, control, value);
 }
-void MidiOut::sendProgramChange(int channel, int value)
+void Output::sendProgramChange(int channel, int value)
 {
 	sendMessage(MIDI_PROGRAM_CHANGE+channel-1, value);
 }
-void MidiOut::sendPitchBend(int channel, int value)
+void Output::sendPitchBend(int channel, int value)
 {
 	if (value >>14 != 0)
 	{
-        std::cout << "[ERROR ci::midi::MidiOut::sendPitchBend] Pitch bend values must be less than " << (1<<14) << std::endl;
+        std::cout << "[ERROR ci::midi::Output::sendPitchBend] Pitch bend values must be less than " << (1<<14) << std::endl;
 	}
 	// least significant 7 bits, most significant 7 bits (assuming 14 bit value)
 	sendPitchBend(channel, value & 0x7F, (value>>7) & 0x7F);
 }
-void MidiOut::sendPitchBend(int channel, unsigned char lsb, unsigned char msb)
+void Output::sendPitchBend(int channel, unsigned char lsb, unsigned char msb)
 {
 	sendMessage(MIDI_PITCH_BEND, lsb, msb);
 }
-void MidiOut::sendAftertouch(int channel, int value)
+void Output::sendAftertouch(int channel, int value)
 {
 	sendMessage(MIDI_AFTERTOUCH+channel-1, value);
 }
-void MidiOut::sendPolyAftertouch(int channel, int pitch, int value)
+void Output::sendPolyAftertouch(int channel, int pitch, int value)
 {
 	sendMessage(MIDI_POLY_AFTERTOUCH+channel-1, pitch, value);
 }
